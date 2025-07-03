@@ -5,5 +5,3 @@ A fully functioning application with various capabilities such as:
 -possibility to deposit, withdraw, transfer money between accounts
 -possibility to see all transactions the user has made
 -validation has been imposed on all transactions
-
-Translated with DeepL.com (free version)
