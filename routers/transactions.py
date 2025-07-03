@@ -29,7 +29,7 @@ async def deposit_money(balance_to_deposit: float, user: user_dependency, db: db
     }
 
 @router.post("/send/{bank_number}", status_code=status.HTTP_204_NO_CONTENT)
-async def send_money(bank_number:int, balance:float, user: user_dependency, db:db_dependency):
+async def send_money(bank_number:int, amount:float, user: user_dependency, db:db_dependency):
    if user is None:
       raise HTTPException(status_code=401, detail="Unauthorized")
    
@@ -40,19 +40,21 @@ async def send_money(bank_number:int, balance:float, user: user_dependency, db:d
    to_account = db.query(BankAccount).filter(BankAccount.account_number == bank_number).first()
    if not to_account:
       raise HTTPException(status_code=400, detail="Account does not exist")
+   if from_account.balance < amount:
+      raise HTTPException(status_code=400, detail="Not enough money")
+   from_account.balance -= amount
+   to_account.balance += amount
    transaction = Transactions(
       from_bank_account=from_account.account_number,
       to_bank_account=to_account.account_number,
-      balance=balance
+      balance=amount
    )
-   from_account.balance -= balance
-   to_account.balance += balance
    db.add(transaction)
    db.commit()
    db.refresh(from_account)
    db.refresh(to_account)
    return {
-        "message": f"{balance} was sent successfully.",
+        "message": f"{amount} was sent successfully.",
         "new_balance": from_account.balance,
          "transactions": [
          {
